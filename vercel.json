@@ -1,5 +1,0 @@
-{
-  "outputDirectory": "build/web",
-  "buildCommand": "flutter build web",
-  "installCommand": "flutter pub get"
-}
