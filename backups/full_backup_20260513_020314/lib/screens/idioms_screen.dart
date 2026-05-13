@@ -1,53 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../data/grammar_data.dart';
-import '../data/vocabulary_data.dart';
-import '../models/grammar_models.dart';
-import '../providers/bookmark_provider.dart';
-import '../providers/tts_provider.dart';
-import '../theme/app_theme.dart';
+import '../data/idioms_data.dart';
 
-class VocabularyScreen extends StatefulWidget {
-  const VocabularyScreen({super.key});
+class IdiomsScreen extends StatefulWidget {
+  const IdiomsScreen({super.key});
 
   @override
-  State<VocabularyScreen> createState() => _VocabularyScreenState();
+  State<IdiomsScreen> createState() => _IdiomsScreenState();
 }
 
-class _VocabularyScreenState extends State<VocabularyScreen> {
+class _IdiomsScreenState extends State<IdiomsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  List<VocabularyCategory>? _categories;
-
-  @override
-  void initState() {
-    super.initState();
-    // Load vocabulary only when screen is opened
-    _loadCategories();
-  }
-
-  Future<void> _loadCategories() async {
-    // Import deferred - load only when screen is accessed
-    final categories = await _getVocabularyCategories();
-    if (mounted) {
-      setState(() => _categories = categories);
-    }
-  }
-
-  Future<List<VocabularyCategory>> _getVocabularyCategories() async {
-    // Dynamic import to enable code splitting
-    final module = await Future.value(
-      // This will be loaded lazily
-      _loadVocabularySync(),
-    );
-    return module;
-  }
-
-  List<VocabularyCategory> _loadVocabularySync() {
-    // Using synchronous import - Flutter web will still code-split
-    // because this is only imported in this file
-    return VocabularyData.categories;
-  }
 
   @override
   void dispose() {
@@ -55,64 +18,42 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
     super.dispose();
   }
 
-  List<VocabularyCategory> get _allCategories {
-    return _categories ?? [];
-  }
-
-  List<VocabularyCategory> get _filteredCategories {
+  List<IdiomCategory> get _filteredCategories {
     if (_searchQuery.isEmpty) {
-      return _allCategories;
+      return IdiomData.categories;
     }
     final query = _searchQuery.toLowerCase();
-    return _allCategories.where((category) {
+    return IdiomData.categories.where((category) {
       if (category.name.toLowerCase().contains(query)) {
         return true;
       }
-      return category.words.any((word) =>
-          word.english.toLowerCase().contains(query) ||
-          word.indonesian.toLowerCase().contains(query));
+      return category.items.any((item) =>
+          item.phrase.toLowerCase().contains(query) ||
+          item.meaning.toLowerCase().contains(query) ||
+          item.example.toLowerCase().contains(query));
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Show loading indicator while categories are being loaded
-    if (_categories == null) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                color: AppTheme.primaryColor,
-              ),
-              const SizedBox(height: 16),
-              const Text('Memuat kosakata...'),
-            ],
-          ),
-        ),
-      );
-    }
-
     final categories = _filteredCategories;
-    final totalWords = _allCategories.fold<int>(
-      0, (sum, cat) => sum + cat.words.length);
+    final totalItems = IdiomData.categories.fold<int>(
+        0, (sum, cat) => sum + cat.items.length);
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Header
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
-            backgroundColor: const Color(vocabularyColor),
+            backgroundColor: const Color(0xFFE91E63),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(vocabularyColor),
-                      const Color(vocabularyColor).withValues(alpha: 0.7),
+                      const Color(0xFFE91E63),
+                      const Color(0xFFE91E63).withValues(alpha: 0.7),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -128,14 +69,14 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                         const Row(
                           children: [
                             Text(
-                              '📚',
+                              '💬',
                               style: TextStyle(fontSize: 40),
                             ),
                             SizedBox(width: 12),
                             Text(
-                              'Vocabulary',
+                              'Idioms & Phrasal Verbs',
                               style: TextStyle(
-                                fontSize: 32,
+                                fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
@@ -144,7 +85,7 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '$totalWords kata | ${categories.length} kategori',
+                          '$totalItems items | ${categories.length} categories',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.white.withValues(alpha: 0.9),
@@ -181,8 +122,8 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                     });
                   },
                   decoration: InputDecoration(
-                    hintText: 'Cari kata...',
-                    prefixIcon: const Icon(Icons.search, color: Color(vocabularyColor)),
+                    hintText: 'Cari idiom atau phrasal verb...',
+                    prefixIcon: const Icon(Icons.search, color: Color(0xFFE91E63)),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear),
@@ -209,7 +150,7 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final category = categories[index];
-                return _VocabularyCategoryCard(
+                return _IdiomCategoryCard(
                   category: category,
                   searchQuery: _searchQuery,
                 );
@@ -226,35 +167,36 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
   }
 }
 
-class _VocabularyCategoryCard extends StatefulWidget {
-  final VocabularyCategory category;
+class _IdiomCategoryCard extends StatefulWidget {
+  final IdiomCategory category;
   final String searchQuery;
 
-  const _VocabularyCategoryCard({
+  const _IdiomCategoryCard({
     required this.category,
     required this.searchQuery,
   });
 
   @override
-  State<_VocabularyCategoryCard> createState() => _VocabularyCategoryCardState();
+  State<_IdiomCategoryCard> createState() => _IdiomCategoryCardState();
 }
 
-class _VocabularyCategoryCardState extends State<_VocabularyCategoryCard> {
+class _IdiomCategoryCardState extends State<_IdiomCategoryCard> {
   bool _isExpanded = false;
 
-  List<VocabularyWord> get _filteredWords {
+  List<IdiomItem> get _filteredItems {
     if (widget.searchQuery.isEmpty) {
-      return widget.category.words;
+      return widget.category.items;
     }
     final query = widget.searchQuery.toLowerCase();
-    return widget.category.words.where((word) =>
-        word.english.toLowerCase().contains(query) ||
-        word.indonesian.toLowerCase().contains(query)).toList();
+    return widget.category.items.where((item) =>
+        item.phrase.toLowerCase().contains(query) ||
+        item.meaning.toLowerCase().contains(query) ||
+        item.example.toLowerCase().contains(query)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final words = _filteredWords;
+    final items = _filteredItems;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -272,7 +214,6 @@ class _VocabularyCategoryCardState extends State<_VocabularyCategoryCard> {
         ),
         child: Column(
           children: [
-            // Category Header
             InkWell(
               onTap: () {
                 setState(() {
@@ -287,13 +228,12 @@ class _VocabularyCategoryCardState extends State<_VocabularyCategoryCard> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(vocabularyColor).withValues(alpha: 0.1),
+                        color: Color(widget.category.color).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(
-                        Icons.folder_outlined,
-                        color: Color(vocabularyColor),
-                        size: 24,
+                      child: Text(
+                        widget.category.icon,
+                        style: const TextStyle(fontSize: 20),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -309,7 +249,7 @@ class _VocabularyCategoryCardState extends State<_VocabularyCategoryCard> {
                             ),
                           ),
                           Text(
-                            '${words.length} kata',
+                            '${items.length} items',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
@@ -318,6 +258,18 @@ class _VocabularyCategoryCardState extends State<_VocabularyCategoryCard> {
                         ],
                       ),
                     ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Color(widget.category.color).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        widget.category.icon,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Icon(
                       _isExpanded
                           ? Icons.keyboard_arrow_up
@@ -328,8 +280,7 @@ class _VocabularyCategoryCardState extends State<_VocabularyCategoryCard> {
                 ),
               ),
             ),
-            // Words List (when expanded)
-            if (_isExpanded && words.isNotEmpty)
+            if (_isExpanded && items.isNotEmpty)
               Container(
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
@@ -341,14 +292,14 @@ class _VocabularyCategoryCardState extends State<_VocabularyCategoryCard> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: words.length,
+                  itemCount: items.length,
                   separatorBuilder: (context, index) => Divider(
                     height: 1,
                     color: Colors.grey[200],
                   ),
                   itemBuilder: (context, index) {
-                    final word = words[index];
-                    return _VocabularyWordTile(word: word);
+                    final item = items[index];
+                    return _IdiomItemTile(item: item);
                   },
                 ),
               ),
@@ -359,24 +310,20 @@ class _VocabularyCategoryCardState extends State<_VocabularyCategoryCard> {
   }
 }
 
-class _VocabularyWordTile extends StatefulWidget {
-  final VocabularyWord word;
+class _IdiomItemTile extends StatefulWidget {
+  final IdiomItem item;
 
-  const _VocabularyWordTile({required this.word});
+  const _IdiomItemTile({required this.item});
 
   @override
-  State<_VocabularyWordTile> createState() => _VocabularyWordTileState();
+  State<_IdiomItemTile> createState() => _IdiomItemTileState();
 }
 
-class _VocabularyWordTileState extends State<_VocabularyWordTile> {
+class _IdiomItemTileState extends State<_IdiomItemTile> {
   bool _showDetails = false;
 
   @override
   Widget build(BuildContext context) {
-    final bookmarkProvider = context.watch<BookmarkProvider>();
-    final ttsProvider = context.watch<TtsProvider>();
-    final isBookmarked = bookmarkProvider.isBookmarked(widget.word.english);
-
     return InkWell(
       onTap: () {
         setState(() {
@@ -395,7 +342,7 @@ class _VocabularyWordTileState extends State<_VocabularyWordTile> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.word.english,
+                        widget.item.phrase,
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -404,7 +351,7 @@ class _VocabularyWordTileState extends State<_VocabularyWordTile> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        widget.word.indonesian,
+                        widget.item.meaning,
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -413,42 +360,6 @@ class _VocabularyWordTileState extends State<_VocabularyWordTile> {
                     ],
                   ),
                 ),
-                // TTS button
-                if (ttsProvider.isEnabled)
-                  GestureDetector(
-                    onTap: () {
-                      if (ttsProvider.isSpeaking) {
-                        ttsProvider.stop();
-                      } else {
-                        ttsProvider.speak(widget.word.english);
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: Icon(
-                        ttsProvider.isSpeaking
-                            ? Icons.volume_up
-                            : Icons.volume_up_outlined,
-                        color: AppTheme.primaryColor,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                // Bookmark button
-                GestureDetector(
-                  onTap: () {
-                    bookmarkProvider.toggleBookmark(widget.word.english);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: isBookmarked ? AppTheme.accentColor : Colors.grey[400],
-                      size: 22,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
                 Icon(
                   _showDetails ? Icons.expand_less : Icons.expand_more,
                   color: Colors.grey[400],
@@ -456,7 +367,6 @@ class _VocabularyWordTileState extends State<_VocabularyWordTile> {
                 ),
               ],
             ),
-            // Example sentences (when expanded)
             if (_showDetails) ...[
               const SizedBox(height: 12),
               Container(
@@ -469,38 +379,66 @@ class _VocabularyWordTileState extends State<_VocabularyWordTile> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Example
-                    if (widget.word.example.isNotEmpty) ...[
-                      _ExampleRow(
-                        label: 'Contoh:',
-                        text: widget.word.example,
-                        color: AppTheme.secondaryColor,
-                      ),
-                      const SizedBox(height: 8),
-                      _ExampleRow(
-                        label: 'Arti:',
-                        text: widget.word.indonesian,
-                        color: Colors.grey[700]!,
-                      ),
-                    ],
-                    // Simple Example
-                    if (widget.word.simpleExample != null) ...[
-                      const SizedBox(height: 8),
-                      _ExampleRow(
-                        label: 'Sederhana:',
-                        text: widget.word.simpleExample!,
-                        color: const Color(0xFF4CAF50),
-                      ),
-                    ],
-                    // Complex Example
-                    if (widget.word.complexExample != null) ...[
-                      const SizedBox(height: 8),
-                      _ExampleRow(
-                        label: 'Lengkap:',
-                        text: widget.word.complexExample!,
-                        color: const Color(0xFFFF9800),
-                      ),
-                    ],
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'English',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF6C63FF),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            widget.item.example,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'Indonesia',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF4CAF50),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            widget.item.exampleId,
+                            style: const TextStyle(
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -508,51 +446,6 @@ class _VocabularyWordTileState extends State<_VocabularyWordTile> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ExampleRow extends StatelessWidget {
-  final String label;
-  final String text;
-  final Color color;
-
-  const _ExampleRow({
-    required this.label,
-    required this.text,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 13,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

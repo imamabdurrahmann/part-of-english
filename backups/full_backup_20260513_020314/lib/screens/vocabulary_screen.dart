@@ -17,37 +17,6 @@ class VocabularyScreen extends StatefulWidget {
 class _VocabularyScreenState extends State<VocabularyScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  List<VocabularyCategory>? _categories;
-
-  @override
-  void initState() {
-    super.initState();
-    // Load vocabulary only when screen is opened
-    _loadCategories();
-  }
-
-  Future<void> _loadCategories() async {
-    // Import deferred - load only when screen is accessed
-    final categories = await _getVocabularyCategories();
-    if (mounted) {
-      setState(() => _categories = categories);
-    }
-  }
-
-  Future<List<VocabularyCategory>> _getVocabularyCategories() async {
-    // Dynamic import to enable code splitting
-    final module = await Future.value(
-      // This will be loaded lazily
-      _loadVocabularySync(),
-    );
-    return module;
-  }
-
-  List<VocabularyCategory> _loadVocabularySync() {
-    // Using synchronous import - Flutter web will still code-split
-    // because this is only imported in this file
-    return VocabularyData.categories;
-  }
 
   @override
   void dispose() {
@@ -55,16 +24,12 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
     super.dispose();
   }
 
-  List<VocabularyCategory> get _allCategories {
-    return _categories ?? [];
-  }
-
   List<VocabularyCategory> get _filteredCategories {
     if (_searchQuery.isEmpty) {
-      return _allCategories;
+      return VocabularyData.categories;
     }
     final query = _searchQuery.toLowerCase();
-    return _allCategories.where((category) {
+    return VocabularyData.categories.where((category) {
       if (category.name.toLowerCase().contains(query)) {
         return true;
       }
@@ -76,26 +41,8 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Show loading indicator while categories are being loaded
-    if (_categories == null) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                color: AppTheme.primaryColor,
-              ),
-              const SizedBox(height: 16),
-              const Text('Memuat kosakata...'),
-            ],
-          ),
-        ),
-      );
-    }
-
     final categories = _filteredCategories;
-    final totalWords = _allCategories.fold<int>(
+    final totalWords = VocabularyData.categories.fold<int>(
       0, (sum, cat) => sum + cat.words.length);
 
     return Scaffold(

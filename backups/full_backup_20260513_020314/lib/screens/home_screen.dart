@@ -5,7 +5,6 @@ import '../models/grammar_models.dart';
 import '../providers/progress_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animations.dart';
-import '../widgets/responsive_wrapper.dart';
 import 'topic_screen.dart';
 import 'vocabulary_screen.dart';
 import 'idioms_screen.dart';
@@ -26,15 +25,10 @@ class HomeScreen extends StatelessWidget {
     final categories = GrammarData.categories;
     final progress = context.watch<ProgressProvider>().progress;
     final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final maxWidth = screenWidth > 900 ? 1200.0 : (screenWidth > 600 ? 800.0 : double.infinity);
 
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxWidth),
-            child: CustomScrollView(
+        child: CustomScrollView(
           slivers: [
             // Header with animations
             SliverToBoxAdapter(
@@ -401,8 +395,6 @@ class HomeScreen extends StatelessWidget {
               child: SizedBox(height: 100),
             ),
           ],
-        ),
-        ),
         ),
       ),
     );
