@@ -306,95 +306,30 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            // Extra Features Grid with animation
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1.3,
+            // Extra Features - Wrap layout
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isDesktop = constraints.maxWidth > 500;
+                    final columns = isDesktop ? 3 : 2;
+                    final spacing = 10.0;
+                    final cardWidth = (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+                    return Wrap(
+                      spacing: spacing,
+                      runSpacing: spacing,
+                      children: [
+                        _buildFeatureCard(context, '🏆', 'Daily\nChallenge', const Color(0xFFFF5722), cardWidth, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DailyChallengeScreen()))),
+                        _buildFeatureCard(context, '📚', 'Spaced\nRepetition', const Color(0xFF9C27B0), cardWidth, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SrsScreen()))),
+                        _buildFeatureCard(context, '🔤', 'Sentence\nTransform', const Color(0xFF00796B), cardWidth, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SentenceTransformScreen()))),
+                        _buildFeatureCard(context, '🐛', 'Grammar\nError Fix', const Color(0xFFE91E63), cardWidth, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GrammarErrorScreen()))),
+                        _buildFeatureCard(context, '🧐', 'Mnemonics', const Color(0xFF673AB7), cardWidth, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MnemonicsScreen()))),
+                        _buildFeatureCard(context, '💬', 'Text-toSpeech', AppTheme.primaryColor, cardWidth, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TtsSettingsScreen()))),
+                      ],
+                    );
+                  },
                 ),
-                delegate: SliverChildListDelegate([
-                  StaggeredListItem(
-                    index: 0,
-                    child: _ExtraFeatureCard(
-                      icon: '🏆',
-                      title: 'Daily\nChallenge',
-                      color: const Color(0xFFFF5722),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const DailyChallengeScreen()),
-                      ),
-                    ),
-                  ),
-                  StaggeredListItem(
-                    index: 1,
-                    child: _ExtraFeatureCard(
-                      icon: '📚',
-                      title: 'Spaced\nRepetition',
-                      color: const Color(0xFF9C27B0),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SrsScreen()),
-                      ),
-                    ),
-                  ),
-                  StaggeredListItem(
-                    index: 2,
-                    child: _ExtraFeatureCard(
-                      icon: '🔤',
-                      title: 'Sentence\nTransform',
-                      color: const Color(0xFF00796B),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const SentenceTransformScreen()),
-                      ),
-                    ),
-                  ),
-                  StaggeredListItem(
-                    index: 3,
-                    child: _ExtraFeatureCard(
-                      icon: '🐛',
-                      title: 'Grammar\nError Fix',
-                      color: const Color(0xFFE91E63),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const GrammarErrorScreen()),
-                      ),
-                    ),
-                  ),
-                  StaggeredListItem(
-                    index: 4,
-                    child: _ExtraFeatureCard(
-                      icon: '🧐',
-                      title: 'Mnemonics',
-                      color: const Color(0xFF673AB7),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const MnemonicsScreen()),
-                      ),
-                    ),
-                  ),
-                  StaggeredListItem(
-                    index: 5,
-                    child: _ExtraFeatureCard(
-                      icon: '💬',
-                      title: 'Text-toSpeech',
-                      color: AppTheme.primaryColor,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const TtsSettingsScreen()),
-                      ),
-                    ),
-                  ),
-                ]),
               ),
             ),
             const SliverToBoxAdapter(
@@ -437,59 +372,51 @@ class _CategoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final categoryColor = Color(category.color);
 
-    return TapScale(
-      onTap: () {
-        if (category.id == 'vocabulary') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const VocabularyScreen(),
-            ),
-          );
-        } else if (category.id == 'idioms') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const IdiomsScreen(),
-            ),
-          );
-        } else if (category.id == 'collocation') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CollocationScreen(),
-            ),
-          );
-        } else if (category.id == 'word_roots') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const WordRootsScreen(),
-            ),
-          );
-        } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TopicScreen(category: category),
-            ),
-          );
-        }
-      },
-      child: RepaintBoundary(
+    return Material(
+      color: theme.cardColor,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () {
+          if (category.id == 'vocabulary') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const VocabularyScreen(),
+              ),
+            );
+          } else if (category.id == 'idioms') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const IdiomsScreen(),
+              ),
+            );
+          } else if (category.id == 'collocation') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CollocationScreen(),
+              ),
+            );
+          } else if (category.id == 'word_roots') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const WordRootsScreen(),
+              ),
+            );
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TopicScreen(category: category),
+              ),
+            );
+          }
+        },
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
           child: Row(
             children: [
               Container(
@@ -571,59 +498,76 @@ class _ExtraFeatureCard extends StatelessWidget {
   final String title;
   final Color color;
   final VoidCallback onTap;
+  final double width;
 
   const _ExtraFeatureCard({
     required this.icon,
     required this.title,
     required this.color,
     required this.onTap,
+    required this.width,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return TapScale(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+    return SizedBox(
+      width: width,
+      height: 80,
+      child: Material(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        shadowColor: Colors.black,
+        elevation: 0,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: color.withValues(alpha: 0.15), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(icon, style: const TextStyle(fontSize: 24)),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(icon, style: const TextStyle(fontSize: 26)),
+                const SizedBox(height: 4),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            const Spacer(),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
+}
+
+Widget _buildFeatureCard(BuildContext context, String icon, String title, Color color, double width, VoidCallback onTap) {
+  return _ExtraFeatureCard(
+    icon: icon,
+    title: title,
+    color: color,
+    onTap: onTap,
+    width: width,
+  );
 }

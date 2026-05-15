@@ -32,21 +32,21 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       body: Row(
         children: [
-          // Desktop/Tablet sidebar navigation
+          // Desktop sidebar navigation
           if (isWideScreen)
             _DesktopSidebar(
               currentIndex: _currentIndex,
               onIndexChanged: (index) => setState(() => _currentIndex = index),
               theme: theme,
               isDark: isDark,
-            )
-          else
-            Expanded(
-              child: IndexedStack(
-                index: _currentIndex,
-                children: _screens,
-              ),
             ),
+          // Main content - always shown
+          Expanded(
+            child: IndexedStack(
+              index: _currentIndex,
+              children: _screens,
+            ),
+          ),
         ],
       ),
       // Bottom navigation for mobile only
